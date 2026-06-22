@@ -231,4 +231,4 @@ Add screenshots of the application here:
 
 ## License
 
-MIT
+MIT License © Gafar Yormaz
