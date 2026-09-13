@@ -1,7 +1,6 @@
 import { FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatBytes } from "@/lib/utils";
 import type { UploadedDocument } from "@/types/chat";
 
 type DocumentListProps = {
@@ -34,7 +33,7 @@ export function DocumentList({ documents }: DocumentListProps) {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{document.filename}</p>
                   <p className="text-xs text-muted-foreground">
-                    {formatBytes(document.size)} · {document.uploadedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    Indexed at {document.uploadedAt.toLocaleString([], { dateStyle: "medium", timeStyle: "short" })}
                   </p>
                 </div>
               </div>

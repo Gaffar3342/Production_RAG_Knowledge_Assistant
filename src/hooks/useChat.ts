@@ -5,7 +5,7 @@ import type { ChatMessage } from "@/types/chat";
 
 const createId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-export function useChat() {
+export function useChat(hasDocuments: boolean) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
 
@@ -13,7 +13,7 @@ export function useChat() {
 
   const sendMessage = async (question: string) => {
     const trimmedQuestion = question.trim();
-    if (!trimmedQuestion || isSending) return;
+    if (!trimmedQuestion || isSending || !hasDocuments) return;
 
     const userMessage: ChatMessage = {
       id: createId(),
@@ -32,6 +32,8 @@ export function useChat() {
         role: "assistant",
         content: response.answer,
         createdAt: new Date(),
+        sources: response.sources,
+        confidence: response.confidence,
       };
 
       setMessages((current) => [...current, assistantMessage]);

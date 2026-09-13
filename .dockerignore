@@ -1,0 +1,12 @@
+.env
+.git
+.venv
+venv
+node_modules
+dist
+data
+database
+uploads
+vector_store/chroma_db
+__pycache__
+*.py[cod]

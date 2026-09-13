@@ -9,8 +9,8 @@ import { useUpload } from "@/hooks/useUpload";
 function App() {
   const { theme, toggleTheme } = useTheme();
   const backendStatus = useBackendStatus();
-  const chat = useChat();
   const upload = useUpload();
+  const chat = useChat(upload.documents.length > 0);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
@@ -41,6 +41,7 @@ function App() {
             messages={chat.messages}
             hasMessages={chat.hasMessages}
             isSending={chat.isSending}
+            canSend={upload.documents.length > 0}
             onSend={chat.sendMessage}
           />
         </div>

@@ -24,6 +24,19 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         )}
       >
         <MarkdownMessage content={message.content} isUser={isUser} />
+        {!isUser && message.sources?.length ? (
+          <div className="mt-3 border-t pt-3 text-xs text-muted-foreground">
+            <p className="mb-2 font-medium text-foreground">Sources</p>
+            <div className="space-y-2">
+              {message.sources.map((source) => (
+                <div key={source.chunk_id} className="rounded-md bg-muted/60 p-2">
+                  <p className="font-medium text-foreground">{source.filename} · page {source.page_number}</p>
+                  <p className="mt-1 line-clamp-3">{source.excerpt}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
       {isUser && (
         <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-secondary text-secondary-foreground">

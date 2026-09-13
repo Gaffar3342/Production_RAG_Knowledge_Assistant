@@ -5,15 +5,16 @@ import { Textarea } from "@/components/ui/textarea";
 
 type ChatInputProps = {
   isSending: boolean;
+  canSend: boolean;
   onSend: (message: string) => void;
 };
 
-export function ChatInput({ isSending, onSend }: ChatInputProps) {
+export function ChatInput({ isSending, canSend, onSend }: ChatInputProps) {
   const [value, setValue] = useState("");
 
   const submit = () => {
     const message = value.trim();
-    if (!message || isSending) return;
+    if (!message || isSending || !canSend) return;
     onSend(message);
     setValue("");
   };
@@ -33,11 +34,11 @@ export function ChatInput({ isSending, onSend }: ChatInputProps) {
             value={value}
             onChange={(event) => setValue(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a question about the uploaded PDFs..."
-            disabled={isSending}
+            placeholder={canSend ? "Ask a question about the uploaded PDFs..." : "Upload a PDF before asking a question..."}
+            disabled={isSending || !canSend}
             className="max-h-44 min-h-[54px] resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
           />
-          <Button size="icon" onClick={submit} disabled={!value.trim() || isSending} aria-label="Send message">
+          <Button size="icon" onClick={submit} disabled={!value.trim() || isSending || !canSend} aria-label="Send message">
             <SendHorizontal className="h-4 w-4" />
           </Button>
         </div>

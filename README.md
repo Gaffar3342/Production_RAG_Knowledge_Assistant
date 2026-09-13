@@ -1,233 +1,149 @@
 # Production RAG Knowledge Assistant
 
-A production-oriented Retrieval-Augmented Generation knowledge assistant for uploading PDF documents and asking grounded questions over their contents. The backend handles ingestion, embeddings, semantic search, and answer generation, while the React frontend provides a polished chat and document-upload experience.
+A full-stack Retrieval-Augmented Generation (RAG) application for asking grounded questions over uploaded PDF documents. It is designed as a portfolio-ready baseline: the API validates uploads, stores files safely, detects duplicates, returns source citations, and persists document metadata.
 
-## Features
+## What it does
 
-- PDF Upload
-- Duplicate Detection
-- Text Extraction
-- Chunking
-- OpenAI Embeddings
-- ChromaDB Vector Search
-- Retrieval-Augmented Generation
-- Semantic Search
-- FastAPI Backend
-- Modern React Frontend
-- Dark and light mode
-- Markdown-rendered AI responses
-- Responsive portfolio-quality interface
+1. Upload a text-based PDF.
+2. Extract its text page by page and split it into overlapping chunks.
+3. Create OpenAI embeddings and save the chunks in ChromaDB.
+4. Retrieve the most relevant chunks for a question.
+5. Generate an answer that is restricted to that retrieved evidence.
+6. Return the answer together with the filename, page number, excerpt, and relevance of each source.
 
-## Tech Stack
+Scanned PDFs are intentionally rejected because they require an OCR stage first.
 
-**Backend**
+## Stack
 
-- Python
-- FastAPI
-- OpenAI
-- ChromaDB
-- SQLite
-- pypdf
+- Backend: FastAPI, OpenAI, ChromaDB, SQLite, pypdf
+- Frontend: React, TypeScript, Vite, Tailwind CSS
+- Runtime: Docker / Docker Compose supported
 
-**Frontend**
+## Reliability features
 
-- React
-- Vite
-- TypeScript
-- Tailwind CSS
-- shadcn/ui-style components
-- Lucide React
+- PDF extension and file-signature validation
+- Configurable 10 MB upload limit
+- UUID-based storage names instead of user-supplied filesystem paths
+- SHA-256 duplicate detection backed by a SQLite unique constraint
+- Cleanup if ingestion fails midway
+- Dedicated health endpoint
+- Grounded-answer instruction and source citations
+- API error responses for invalid, duplicate, oversized, or premature requests
+- Small automated test suite for health and upload validation
 
-## Architecture
+## Quick start
 
-The application follows a complete RAG pipeline:
-
-```text
-User uploads PDF
-        ↓
-Extract text
-        ↓
-Chunk text
-        ↓
-Generate embeddings
-        ↓
-Store in ChromaDB
-        ↓
-User asks question
-        ↓
-Generate query embedding
-        ↓
-Semantic search
-        ↓
-Retrieve relevant chunks
-        ↓
-Generate grounded answer
-        ↓
-Return response
-```
-
-The backend exposes document upload and chat endpoints. Uploaded PDF content is extracted, chunked, embedded with OpenAI embeddings, and persisted in ChromaDB. When a user asks a question, the system embeds the query, retrieves semantically relevant chunks, and sends only that retrieved context to the answer-generation step.
-
-## API Endpoints
-
-### Upload PDF
-
-```http
-POST /upload
-Content-Type: multipart/form-data
-```
-
-Field name:
-
-```text
-file
-```
-
-Successful response:
-
-```json
-{
-  "message": "Document uploaded successfully",
-  "filename": "example.pdf"
-}
-```
-
-### Chat
-
-```http
-POST /chat
-Content-Type: application/json
-```
-
-Request:
-
-```json
-{
-  "question": "What is machine learning?"
-}
-```
-
-Response:
-
-```json
-{
-  "answer": "..."
-}
-```
-
-## Installation
-
-### Backend
-
-Create and activate a Python virtual environment, then install the backend dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-Start the FastAPI server:
-
-```bash
-uvicorn main:app --reload
-```
-
-By default, FastAPI runs at:
-
-```text
-http://127.0.0.1:8000
-```
-
-### Frontend
-
-Install frontend dependencies:
-
-```bash
-npm install
-```
-
-Start the Vite development server:
-
-```bash
-npm run dev
-```
-
-Build for production:
-
-```bash
-npm run build
-```
-
-Preview the production build:
-
-```bash
-npm run preview
-```
-
-## Environment Variables
-
-Create a local environment file from the example:
+### 1. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-Example:
+Set `OPENAI_API_KEY` in `.env`. The API reads `OPENAI_MODEL`, `EMBEDDING_MODEL`, `MAX_UPLOAD_SIZE_MB`, and `FRONTEND_ORIGINS` from the same file.
 
-```env
-OPENAI_API_KEY=your_key
-VITE_API_URL=http://127.0.0.1:8000
-FRONTEND_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+### 2. Run the backend
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload
 ```
 
-`VITE_API_URL` is required by the frontend and should point to the deployed FastAPI backend URL.
-`FRONTEND_ORIGINS` controls which browser origins are allowed to call the FastAPI API.
+The API is available at `http://127.0.0.1:8000` and health is available at `GET /health`.
 
-## Screenshots
+### 3. Run the frontend
 
-Add screenshots of the application here:
+In a second terminal:
 
-- `docs/screenshots/light-mode.png`
-- `docs/screenshots/dark-mode.png`
-- `docs/screenshots/mobile-chat.png`
+```bash
+npm install
+npm run dev
+```
 
-## Project Structure
+Set `VITE_API_URL=http://127.0.0.1:8000` in `.env` before starting Vite.
+
+### Docker
+
+For the API only:
+
+```bash
+docker compose up --build
+```
+
+The named Docker volume retains the SQLite metadata, uploaded PDFs, and Chroma data between container restarts.
+
+## API
+
+### `POST /upload`
+
+Send `multipart/form-data` with a `file` field.
+
+```json
+{
+  "document_id": "b8d7...",
+  "filename": "handbook.pdf",
+  "message": "Document uploaded and indexed successfully."
+}
+```
+
+### `GET /documents`
+
+Returns persisted document metadata so the frontend can restore its document list after a refresh.
+
+### `POST /chat`
+
+```json
+{ "question": "What is the refund policy?" }
+```
+
+```json
+{
+  "answer": "...",
+  "confidence": 0.86,
+  "sources": [
+    {
+      "filename": "handbook.pdf",
+      "page_number": 4,
+      "excerpt": "..."
+    }
+  ]
+}
+```
+
+## Tests
+
+```bash
+pytest
+npm run lint
+npm run build
+```
+
+## Architecture
 
 ```text
-.
-├── main.py
-├── routers/
-├── schemas/
-├── services/
-├── vector_store/
-├── src/
-│   ├── components/
-│   ├── hooks/
-│   ├── lib/
-│   ├── services/
-│   └── types/
-├── package.json
-├── tailwind.config.ts
-└── vite.config.ts
+PDF → validate → safe local storage → text/page extraction → chunking
+    → OpenAI embeddings → ChromaDB
+
+Question → query embedding → Chroma similarity search → evidence-only LLM answer
+         → answer + source citations
 ```
 
-## Deployment Notes
+## Project structure
 
-- Deploy the FastAPI backend with `OPENAI_API_KEY` configured in the backend environment.
-- Deploy the frontend as a static Vite app.
-- Set `VITE_API_URL` during the frontend build to the public backend URL.
-- If frontend and backend are hosted on different origins, enable CORS in the FastAPI application for the frontend domain.
+```text
+main.py                   FastAPI application and CORS/lifespan setup
+config.py                 Environment-backed application settings
+routers/                  Upload, document list, chat, health endpoints
+services/                 Validation, extraction, embeddings, answer generation, SQLite metadata
+vector_store/             ChromaDB persistence and retrieval
+src/                      React interface
+tests/                    Focused backend checks
+```
 
-## Future Improvements
+## Next production steps
 
-- Authentication
-- Multi-user support
-- Streaming responses
-- Conversation history
-- Source citations
-- Docker deployment
-- Kubernetes support
-- Monitoring
-- Evaluation metrics
+This project is intentionally a single-user local portfolio application. A production multi-user version should add authentication, object storage, background jobs, per-user document isolation, rate limiting, observability, and RAG evaluation datasets.
 
 ## License
 

@@ -1,4 +1,4 @@
-import type { ApiErrorResponse, ChatResponse, UploadResponse } from "@/types/api";
+import type { ApiErrorResponse, ChatResponse, DocumentSummary, UploadResponse } from "@/types/api";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -27,7 +27,7 @@ export async function checkBackendStatus(signal?: AbortSignal) {
   if (!baseUrl) return false;
 
   try {
-    const response = await fetch(`${baseUrl}/openapi.json`, { signal });
+    const response = await fetch(`${baseUrl}/health`, { signal });
     return response.ok;
   } catch {
     return false;
@@ -47,6 +47,14 @@ export async function uploadDocument(file: File): Promise<UploadResponse> {
 
   if (!response.ok) throw await parseApiError(response);
   return response.json() as Promise<UploadResponse>;
+}
+
+export async function fetchDocuments(): Promise<DocumentSummary[]> {
+  if (!baseUrl) throw new Error("VITE_API_URL is not configured.");
+
+  const response = await fetch(`${baseUrl}/documents`);
+  if (!response.ok) throw await parseApiError(response);
+  return response.json() as Promise<DocumentSummary[]>;
 }
 
 export async function sendChatMessage(question: string): Promise<ChatResponse> {

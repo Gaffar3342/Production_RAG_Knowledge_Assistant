@@ -5,11 +5,13 @@ export type ChatMessage = {
   role: ChatRole;
   content: string;
   createdAt: Date;
+  sources?: SourceCitation[];
+  confidence?: number;
 };
 
 export type UploadedDocument = {
   id: string;
   filename: string;
-  size: number;
   uploadedAt: Date;
 };
+import type { SourceCitation } from "@/types/api";

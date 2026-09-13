@@ -9,10 +9,11 @@ type ChatPanelProps = {
   messages: ChatMessage[];
   hasMessages: boolean;
   isSending: boolean;
+  canSend: boolean;
   onSend: (message: string) => void;
 };
 
-export function ChatPanel({ messages, hasMessages, isSending, onSend }: ChatPanelProps) {
+export function ChatPanel({ messages, hasMessages, isSending, canSend, onSend }: ChatPanelProps) {
   const scrollAnchorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export function ChatPanel({ messages, hasMessages, isSending, onSend }: ChatPane
           <EmptyState />
         )}
       </div>
-      <ChatInput isSending={isSending} onSend={onSend} />
+      <ChatInput isSending={isSending} canSend={canSend} onSend={onSend} />
     </main>
   );
 }

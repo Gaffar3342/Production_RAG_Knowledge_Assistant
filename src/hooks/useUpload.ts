@@ -1,15 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { uploadDocument } from "@/services/api";
+import { fetchDocuments, uploadDocument } from "@/services/api";
 import type { UploadedDocument } from "@/types/chat";
 
-const createId = () => `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+const mapDocument = (document: { id: string; original_filename: string; created_at: string }): UploadedDocument => ({
+  id: document.id,
+  filename: document.original_filename,
+  uploadedAt: new Date(document.created_at),
+});
 
 export function useUpload() {
   const [documents, setDocuments] = useState<UploadedDocument[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    let isActive = true;
+    fetchDocuments()
+      .then((response) => {
+        if (isActive) setDocuments(response.map(mapDocument));
+      })
+      .catch(() => {
+        // The backend status badge is the visible error state for an unavailable API.
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const chooseFile = (file: File | null) => {
     if (!file) {
@@ -29,17 +47,13 @@ export function useUpload() {
     if (!selectedFile || isUploading) return;
 
     setIsUploading(true);
-    setProgress(12);
-    const interval = window.setInterval(() => {
-      setProgress((current) => Math.min(current + 13, 88));
-    }, 260);
+    setProgress(20);
 
     try {
       const response = await uploadDocument(selectedFile);
       const document: UploadedDocument = {
-        id: createId(),
+        id: response.document_id,
         filename: response.filename || selectedFile.name,
-        size: selectedFile.size,
         uploadedAt: new Date(),
       };
 
@@ -54,7 +68,6 @@ export function useUpload() {
       toast.error("Upload failed", { description: message });
       setProgress(0);
     } finally {
-      window.clearInterval(interval);
       window.setTimeout(() => {
         setIsUploading(false);
         setProgress(0);
