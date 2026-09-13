@@ -2,6 +2,8 @@
 
 A full-stack Retrieval-Augmented Generation (RAG) application for asking grounded questions over uploaded PDF documents. It is designed as a portfolio-ready baseline: the API validates uploads, stores files safely, detects duplicates, returns source citations, and persists document metadata.
 
+![Knowledge assistant interface](assets/production-rag-interface.png)
+
 ## What it does
 
 1. Upload a text-based PDF.
